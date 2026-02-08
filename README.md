@@ -6,7 +6,14 @@ Team Members:
 - Sundari Avanthikaa Srinivasan
 - Amber Yang
 
-This project combines food access analytics with a practical cooking and grocery planning tool to address food insecurity from both a structural and individual perspective.
+Tool Project (with analytical and data presentation components)
+
+Questions of Interest
+- Where are food deserts located across the United States, and how do they intersect with income, geographic access to supermarkets, and fast food density?
+- How have patterns of food access and food insecurity changed over time at the census tract level?
+- How can data systems move beyond identifying food access inequities to supporting individual-level action?
+- How can recipe selection and grocery planning tools reduce barriers to cooking at home for individuals living in or near food deserts?
+- This project combines food access analytics with a practical cooking and grocery planning tool to address food insecurity from both a structural and individual perspective.
 
 On a macro level, the project analyzes food deserts across the United States, visualizing the intersection of income, geographic access to supermarkets, and fast food density. Using public datasets from the USDA Food Access Research Atlas, Census Bureau ACS 5-Year Estimates, and local health datasets, we identify and map high-risk food desert areas and examine how these patterns have evolved over time.
 
