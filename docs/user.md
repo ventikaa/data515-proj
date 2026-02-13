@@ -11,7 +11,7 @@ Sarah works long hours and has very little time to spend at the store.
 Sarah has some technical skills but wants a quick answer.
 
 
-User Case:
+**User Case:**
 
 Objective: System displays accurate search results that user needs
 
@@ -24,7 +24,7 @@ User: Filter by cuisine
 System: Show subset of item
 
 
-User Case
+**User Case**
 
 Objective: System processes recipe user has selected
 
@@ -36,7 +36,8 @@ User: Inputs zip code
 
 System: Queries the API and takes given recipe ingredients and location to get "shopping cart".
 
-User Case
+
+**User Case**
 
 Objective: System displays accurately updates shopping cart.
 
@@ -45,9 +46,9 @@ User: Selects ingredients they already have.
 System: Removes selected ingredients from shopping cart and updates price.
 
 
-Component Design:
+**Component Design:**
 
-Name: searchRecipe
+**Name: searchRecipe**
 
 What it does: Returns recipes that match description
 
@@ -58,7 +59,7 @@ Outputs: list of recipes with descriptions if possible
 Assumptions: none
 
 
-title search recipe
+**title search recipe**
 
 user->System: text based string input or filter selection
 
@@ -69,7 +70,7 @@ Database -> System: compiles results of user input, are there results or not
 System -> User: return results to user
 
 
-Name: inputLocation
+**Name: inputLocation**
 
 What it does: Locate store for user
 
@@ -80,14 +81,14 @@ Output: Store closest to them (not explicity shown to user)
 Assumption: User is near a Kroger/wants to go to Kroger
 
 
-title Store Location
+**title Store Location**
 
 user -> system: zip code
 
 API Call: obtain store id 
 
 
-Name: createCart
+**Name: createCart**
 
 What it does: Gather ingredients for user
 
@@ -98,7 +99,7 @@ Output: list of ingredients from given Kroger store and price
 Assumption: they want the cheapest item.
 
 
-title create cart 
+**title create cart**
 
 system -> database: get recipe ingredients
 
@@ -110,7 +111,7 @@ System -> output list of items in cart
 
 
 
-Name: showRecipe
+**Name: showRecipe**
 
 What it does: Display the recipe and instructions and shopping cart
 
@@ -121,7 +122,7 @@ Output: Display the recipe and instructions and shopping cart
 Assumption: They still want the recipe.
 
 
-title showRecipe
+**title showRecipe**
 
 Database to system: get the instructions of recipe
 
