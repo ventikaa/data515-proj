@@ -8,7 +8,7 @@ Sarah is a young working adult.
 Sarah feels overwhelmed at the grocery store.
 Sarah often overbuys at the grocery store.
 Sarah works long hours and has very little time to spend at the store.
-Sarah has some technical skills but wants a quick answer.
+Sarah has some technical skills but wants a quick answer. <br><br><br>
 
 
 **User Case:**
@@ -21,7 +21,7 @@ System: Queries results from search or shows all recipe while scrolling
 
 User: Filter by cuisine
 
-System: Show subset of item
+System: Show subset of item <br><br><br>
 
 
 **User Case**
@@ -34,7 +34,7 @@ System: Prompts user to enter zip code
 
 User: Inputs zip code
 
-System: Queries the API and takes given recipe ingredients and location to get "shopping cart".
+System: Queries the API and takes given recipe ingredients and location to get "shopping cart". <br><br><br>
 
 
 **User Case**
@@ -43,7 +43,7 @@ Objective: System displays accurately updates shopping cart.
 
 User: Selects ingredients they already have.
 
-System: Removes selected ingredients from shopping cart and updates price.
+System: Removes selected ingredients from shopping cart and updates price. <br><br><br>
 
 
 **Component Design:**
@@ -67,7 +67,7 @@ System -> Database: if it's text, query by recipe name, if filter, shows recipes
 
 Database -> System: compiles results of user input, are there results or not
 
-System -> User: return results to user
+System -> User: return results to user <br><br><br>
 
 
 **Name: inputLocation**
@@ -85,7 +85,7 @@ Assumption: User is near a Kroger/wants to go to Kroger
 
 user -> system: zip code
 
-API Call: obtain store id 
+API Call: obtain store id  <br><br><br>
 
 
 **Name: createCart**
@@ -107,7 +107,7 @@ database -> API: get ingredients and price points
 
 API -> System: put everything in cart
 
-System -> output list of items in cart
+System -> output list of items in cart <br><br><br>
 
 
 
