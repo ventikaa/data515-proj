@@ -1,50 +1,3 @@
-Adam is a college student.
-Adam wants to eat healthier and save more money.
-Adam wants to eat out less.
-Adam wants to easily figure out what ingredients he needs.
-Adam wants does not have high technical skills and values a simple interface to make things as easy as possible.
-
-Sarah is a young working adult.
-Sarah feels overwhelmed at the grocery store.
-Sarah often overbuys at the grocery store.
-Sarah works long hours and has very little time to spend at the store.
-Sarah has some technical skills but wants a quick answer. <br><br><br>
-
-
-**User Case:**
-
-Objective: System displays accurate search results that user needs
-
-User: Search for recipe by entering word or scrolling through page
-
-System: Queries results from search or shows all recipe while scrolling
-
-User: Filter by cuisine
-
-System: Show subset of item <br><br><br>
-
-
-**User Case**
-
-Objective: System processes recipe user has selected
-
-User: Selects Recipe
-
-System: Prompts user to enter zip code
-
-User: Inputs zip code
-
-System: Queries the API and takes given recipe ingredients and location to get "shopping cart". <br><br><br>
-
-
-**User Case**
-
-Objective: System displays accurately updates shopping cart.
-
-User: Selects ingredients they already have.
-
-System: Removes selected ingredients from shopping cart and updates price. <br><br><br>
-
 
 **Component Design:**
 
@@ -127,6 +80,8 @@ Assumption: They still want the recipe.
 Database to system: get the instructions of recipe
 
 System -> user: output of shopping cart and instructions on to a page
+
+The diagrams are illustrated in the Component_Diagram.png file within the docs/ folder
 
 
 
