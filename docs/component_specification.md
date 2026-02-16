@@ -1,89 +1,94 @@
+# Component Specification
 
-**Component Design:**
+## Component 1: Recipe Data Manager
 
-**Name: searchRecipe**
+### Description
+Manages access to the curated recipe dataset and provides search and filtering functionality.
 
-What it does: Returns recipes that match description
+### Inputs
+- search_query: string
+- filters: dictionary (e.g., cuisine type)
 
-Inputs: recipe name or filter selection
+### Outputs
+- List of Recipe objects:
+  - id: int
+  - name: string
+  - ingredients: list of strings
+  - instructions: string
+  - cuisine: string
 
-Outputs: list of recipes with descriptions if possible
-
-Assumptions: none
-
-
-**title search recipe**
-
-user->System: text based string input or filter selection
-
-System -> Database: if it's text, query by recipe name, if filter, shows recipes
-
-Database -> System: compiles results of user input, are there results or not
-
-System -> User: return results to user <br><br><br>
-
-
-**Name: inputLocation**
-
-What it does: Locate store for user
-
-Input: Zip code, City, State
-
-Output: Store closest to them (not explicity shown to user)
-
-Assumption: User is near a Kroger/wants to go to Kroger
+### Responsibilities
+- Load curated dataset
+- Perform keyword search
+- Apply cuisine filters
+- Return structured recipe objects
 
 
-**title Store Location**
+---
 
-user -> system: zip code
+## Component 2: Location & Store Service
 
-API Call: obtain store id  <br><br><br>
+### Description
+Handles store lookup functionality using the Kroger API.
 
+### Inputs
+- zipcode: string
 
-**Name: createCart**
+### Outputs
+- store_id: string
 
-What it does: Gather ingredients for user
-
-Input: Recipe Name, storeid
-
-Output: list of ingredients from given Kroger store and price
-
-Assumption: they want the cheapest item.
-
-
-**title create cart**
-
-system -> database: get recipe ingredients
-
-database -> API: get ingredients and price points
-
-API -> System: put everything in cart
-
-System -> output list of items in cart <br><br><br>
+### Responsibilities
+- Validate zipcode
+- Authenticate with Kroger API
+- Retrieve nearest store ID
+- Handle API errors
 
 
+---
 
-**Name: showRecipe**
+## Component 3: Cart & Pricing Manager
 
-What it does: Display the recipe and instructions and shopping cart
+### Description
+Generates a shopping cart based on recipe ingredients and retrieves pricing information from Kroger API.
 
-Input: createCart
+### Inputs
+- recipe_id: int
+- store_id: string
 
-Output: Display the recipe and instructions and shopping cart
+### Outputs
+- List of CartItem objects:
+  - name: string
+  - price: float
+  - quantity: string
+- total_cost: float
 
-Assumption: They still want the recipe.
-
-
-**title showRecipe**
-
-Database to system: get the instructions of recipe
-
-System -> user: output of shopping cart and instructions on to a page
-
-The diagrams are illustrated in the Component_Diagram.png file within the docs/ folder
-
-
-
+### Responsibilities
+- Retrieve ingredient list from Recipe Data Manager
+- Query Kroger API for pricing data
+- Select lowest available priced item
+- Compile structured shopping cart
+- Recalculate total when items are removed
 
 
+---
+
+## Component 4: Frontend Controller
+
+### Description
+Handles user interactions and coordinates communication between components.
+
+### Inputs
+- User search input
+- Zip code input
+- Recipe selection
+- Ingredient removal selection
+
+### Outputs
+- Rendered recipe list
+- Displayed shopping cart
+- Displayed instructions
+
+### Responsibilities
+- Collect user input
+- Call appropriate backend components
+- Display formatted results
