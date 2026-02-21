@@ -1,8 +1,8 @@
-**Technology Review**
+# Technology Review
 
 Technology Review: Python Web Frameworks for Data Tools
 
-1. Background
+### 1. Background
 
 Our project requires a user interface that allows for interactive recipe searching, ZIP-code-based location filtering, and dynamic pricing displays using the Kroger Development API. Therefore, we need a framework that can handle:
 
@@ -12,9 +12,9 @@ API Integration: Secure handling of OAuth2 tokens and asynchronous product queri
 
 Data Visualization: Clear, interactive display of grocery prices and the ingredients for the recipe.
 
-2. Technology Candidates
+### 2. Technology Candidates
 
-Streamlit
+**Streamlit**
 
 Author: Snowflake (formerly Streamlit Inc.)
 
@@ -26,7 +26,7 @@ Pros of using Streamlit: Simple to use, great for small-scale app development, m
 
 Cons: Less customization features.
 
-Plotly Dash
+**Plotly Dash**
 
 Author: Plotly
 
