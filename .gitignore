@@ -1,1 +1,3 @@
 data/recipes.csv
+.env
+.kroger_token_client_product.compact.json
