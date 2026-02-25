@@ -40,10 +40,10 @@ def main():
         location_id_dict[i] = location['locationId']
         print('-' * 50)
         print(f'LOCATION #{i}')
-        print(f'Location ID: {location['locationId']}')
-        print(f'Chain: {location['chain']}')
-        print(f'Name: {location['name']}')
-        print(f'Address: {location['address']['addressLine1']} {location['address']['city']}, {location['address']['state']}, {location['address']['zipCode']}')
+        print(f'Location ID: {location["locationId"]}')
+        print(f'Chain: {location["chain"]}')
+        print(f'Name: {location["name"]}')
+        print(f"Address: {location['address']['addressLine1']} {location['address']['city']}, {location['address']['state']}, {location['address']['zipCode']}")
         print('-' * 50)
         i += 1
     
