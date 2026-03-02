@@ -58,7 +58,7 @@ def main():
         except:
             print("Input value not accepted, please try again.")
 
-    
+    print("STORE LOCATION ID: ", store_location_id)
     # mock recipe data below
     mock_recipe_ingredients = [
         # "c(""fresh mushrooms"", ""butter"", ""boneless skinless chicken breast halves"", ""flour"", ""butter"", ""marsala"", ""chicken broth"", ""salt"", ""mozzarella cheese"", ""parmesan cheese"", ""green onion"""
