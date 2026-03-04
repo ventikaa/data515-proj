@@ -1,3 +1,4 @@
+# LEGACY - To be removed
 from kroger_api import KrogerAPI
 from kroger_api.utils.env import load_and_validate_env, get_zip_code
 from dotenv import load_dotenv

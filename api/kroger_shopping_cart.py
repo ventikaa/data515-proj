@@ -1,3 +1,7 @@
+"""
+Kroger shopping cart backend component
+Builds the "shopping_cart" ingredients dict that the front-end will display
+"""
 from kroger_api import KrogerAPI
 from api.kroger_auth import init_kroger_env
 

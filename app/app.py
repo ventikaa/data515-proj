@@ -2,7 +2,6 @@ import dash
 from dash import Dash, html
 import dash_bootstrap_components as dbc
 from api.kroger_auth import init_kroger_env
-init_kroger_env()
 
 app = Dash(
     __name__,
@@ -28,5 +27,5 @@ app.layout = dbc.Container([
 
 if __name__ == "__main__":
     # print(dash.page_registry)
-
+    init_kroger_env()
     app.run(debug=True)

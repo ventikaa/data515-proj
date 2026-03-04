@@ -115,6 +115,3 @@ def update_recipes(search_query, selected_category):
     count_text = f"Showing {len(filtered_df)} recipes."
     return recipe_cards, count_text
 
-# if __name__ == "__main__":
-#     print("--- Dash is starting up! ---")
-#     app.run(debug=True)

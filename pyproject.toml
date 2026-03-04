@@ -1,0 +1,33 @@
+[project]
+name = "cooking-helper"
+version = "0.0.1"
+authors = [
+  { name="Jianna Wong" },
+  { name="William Hu" },
+  { name="Amber Yang" },
+  { name="Sundari Avanthikaa Srinivasan" }
+]
+description = "cooking-helper"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "beautifulsoup4",
+    "numpy",
+    "pandas",
+    "requests",
+    "tqdm",
+    "kroger-api",
+    "plotly",
+    "dash",
+    "dash-bootstrap-components",
+    "python-dotenv"
+]
+
+[tool.setuptools.packages.find]
+include = ["app", "api", "data"]

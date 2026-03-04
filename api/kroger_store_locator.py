@@ -1,3 +1,7 @@
+"""
+Kroger zip code store locator backend component
+Will be on the home-page where user will input zip code and select best store for them.
+"""
 from kroger_api import KrogerAPI
 from api.kroger_auth import init_kroger_env
 

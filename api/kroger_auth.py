@@ -1,3 +1,7 @@
+"""
+Utility module that loads in the Kroger API secrets
+Used by kroger_shopping_cart and kroger_store_locator
+"""
 from dotenv import load_dotenv
 from pathlib import Path
 from kroger_api.utils.env import load_and_validate_env
@@ -24,6 +28,6 @@ def init_kroger_env() -> None:
         "KROGER_CLIENT_SECRET",
     ])
 
-    print("CREDENTIALS LOADED")
+    # print("CREDENTIALS LOADED")
 
     _ENV_LOADED = True
