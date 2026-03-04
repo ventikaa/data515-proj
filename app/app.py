@@ -9,9 +9,13 @@ import dash
 import json
 from dash import dcc, html, Input, Output, State, callback, ALL
 import dash_bootstrap_components as dbc
-root_dir = Path(__file__).resolve().parent.parent
-sys.path.append(str(root_dir))
-from api.shopping_cart import main
+from api.kroger_shopping_cart import ShoppingCart
+from api.kroger_store_locator import KrogerStoreLocator
+
+
+# root_dir = Path(__file__).resolve().parent.parent
+# sys.path.append(str(root_dir))
+# from api.shopping_cart import main
 
 def get_kroger_pricing_with_id(ingredient_list, location_id):
     kroger = KrogerAPI()
@@ -33,12 +37,6 @@ def get_kroger_pricing_with_id(ingredient_list, location_id):
         else:
             results[ingredient] = {"description": "Not available", "price": 0.0}
     return results
-        
-    if valid_options:
-        # Sort by price and pick cheapest 
-        ingredient_results[ingredient] = sorted(valid_options, key=lambda x: x['price'])[0]
-            
-    return ingredient_results
 
 # --- 1. Custom Aesthetic Styles ---
 COLORS = {
@@ -58,7 +56,10 @@ def parse_r_list(r_string):
     content = re.sub(r'\)$', '', content)
     return re.findall(r'"([^"]*)"', content)
 
-df = pd.read_csv('/Users/jiannawong/Desktop/Data515/data515-proj/data/data.csv')
+BASE_DIR = Path(__file__).resolve().parent.parent
+csv_path = BASE_DIR / "data" / "data.csv"
+df = pd.read_csv(csv_path)
+
 df['RecipeIngredientParts'] = df['RecipeIngredientParts'].apply(parse_r_list)
 df['RecipeIngredientQuantities'] = df['RecipeIngredientQuantities'].apply(parse_r_list)
 df['Images'] = df['Images'].apply(parse_r_list)
@@ -67,6 +68,8 @@ df['Images'] = df['Images'].apply(parse_r_list)
 app = dash.Dash(__name__, 
                 external_stylesheets=[dbc.themes.BOOTSTRAP, "https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap"],
                 suppress_callback_exceptions=True)
+
+# dash.register_page(__name__, path="/")
 
 app.layout = html.Div(style={"backgroundColor": COLORS["background"], "minHeight": "100vh", **FONT_STYLE}, children=[
     dcc.Store(id='cart-store', data={}, storage_type='session'),
@@ -103,6 +106,7 @@ def recipe_finder_layout():
                 html.P("Find recipes and check real-time Kroger prices", className="text-muted"),
             ], width=9),
             dbc.Col(dbc.Button("🛒 My Cart", href="/cart", style={"backgroundColor": COLORS["secondary"], "border": "none", "borderRadius": "20px", "marginTop": "40px"}), width=3)
+
         ]),
         dbc.Row([
             dbc.Col([
@@ -193,24 +197,27 @@ def update_recipes(search, cat):
 def find_stores(n_clicks, zip_code):
     if not zip_code: return False, ""
     
-    kroger = KrogerAPI()
-    kroger.authorization.get_token_with_client_credentials("product.compact")
-    locations = kroger.location.search_locations(zip_code=zip_code, radius_in_miles=10, limit=5)
+    storeLocator = KrogerStoreLocator(zip_code)
+    store_locations = storeLocator.get_stores()
+    # kroger = KrogerAPI()
+    # kroger.authorization.get_token_with_client_credentials("product.compact")
+    # locations = kroger.location.search_locations(zip_code=zip_code, radius_in_miles=10, limit=5)
     
+    # print(store_locations)
     store_options = []
-    for loc in locations.get("data", []):
-        addr = loc['address']
-        full_addr = f"{addr['addressLine1']}, {addr['city']}, {addr['state']}"
+    for store in store_locations:
         store_options.append(
             dbc.Card([
                 dbc.CardBody([
-                    html.H6(f"{loc['chain'].capitalize()} - {loc['name']}"),
-                    html.P(full_addr, className="small text-muted"),
-                    dbc.Button("Select This Store", id={'type': 'select-store-btn', 'id': loc['locationId'], 'name': loc['name']}, color="primary", size="sm")
+                    html.H6(f"{store['chain'].capitalize()} - {store['name']}"),
+                    html.P(store['address'], className="small text-muted"),
+                    dbc.Button("Select This Store", id={'type': 'select-store-btn', 'id': store['location_id'], 'name': store['name']}, color="primary", size="sm")
                 ])
             ], className="mb-2")
         )
+    
     return True, store_options
+
 
 # 2. Save the selected store ID to dcc.Store
 @callback(
@@ -250,8 +257,12 @@ def add_to_cart(n_clicks, cart, store_id):
     ingredients = df.iloc[idx]['RecipeIngredientParts']
     
     # get_kroger_pricing to accept the location_id directly
-    real_prices = get_kroger_pricing_with_id(ingredients, loc_id)
+    shopping_cart = ShoppingCart(loc_id)
+    ingredients_list = shopping_cart.price_ingredients(ingredients)
+    real_prices = shopping_cart.get_cheapest_ingredients(ingredients_list)
+    # real_prices = get_kroger_pricing_with_id(ingredients, loc_id)
     
+    cart = {} # Reset cart
     for ing, data in real_prices.items():
         if ing not in cart:
             cart[ing] = {"description": data['description'], "price": data['price'], "qty": 1}
