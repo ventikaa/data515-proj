@@ -258,6 +258,7 @@ def add_to_cart(n_clicks, cart, store_id):
     
     # get_kroger_pricing to accept the location_id directly
     shopping_cart = ShoppingCart(loc_id)
+    print(ingredients)
     ingredients_list = shopping_cart.price_ingredients(ingredients)
     real_prices = shopping_cart.get_cheapest_ingredients(ingredients_list)
     # real_prices = get_kroger_pricing_with_id(ingredients, loc_id)

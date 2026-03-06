@@ -55,6 +55,7 @@ def main():
             if store_number_selector >= 1 and store_number_selector <= 5:
                 store_number_selector_valid = True
                 store_location_id = location_id_dict[store_number_selector]
+                print(store_location_id)
         except:
             print("Input value not accepted, please try again.")
 

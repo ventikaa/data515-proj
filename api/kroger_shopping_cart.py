@@ -77,7 +77,7 @@ class ShoppingCart:
             if isinstance(products, list) and products:
                 # Sort by price and take the first (cheapest)
                 
-                print(products)
+                # print(products)
                 sorted_products = sorted(products, key=lambda x: x["price"])
                 cheapest_dict[ing] = sorted_products[0]
             else:
