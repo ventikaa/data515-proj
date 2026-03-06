@@ -9,6 +9,7 @@ import dash
 import json
 from dash import dcc, html, Input, Output, State, callback, ALL
 import dash_bootstrap_components as dbc
+
 root_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(root_dir))
 from api.shopping_cart import main
@@ -54,14 +55,26 @@ FONT_STYLE = {"fontFamily": "'Quicksand', sans-serif"}
 def parse_r_list(r_string):
     if pd.isna(r_string) or not isinstance(r_string, str) or r_string == "character(0)":
         return []
+    
     content = re.sub(r'^c\(', '', r_string)
     content = re.sub(r'\)$', '', content)
-    return re.findall(r'"([^"]*)"', content)
+    
+    # This finds all text inside quotes
+    parts = re.findall(r'"([^"]*)"', content)
+    
+    # Removes any steps that are just commas, spaces, or empty
+    parts = [p.strip() for p in parts if p.strip() and p.strip() != ","]
+    parts = [p.replace('\\', '').strip() for p in parts if p.strip() and p.strip() != ","]
+    if not parts and content.strip():
+        return [content.strip()]
+        
+    return parts
 
 df = pd.read_csv('/Users/jiannawong/Desktop/Data515/data515-proj/data/data.csv')
 df['RecipeIngredientParts'] = df['RecipeIngredientParts'].apply(parse_r_list)
 df['RecipeIngredientQuantities'] = df['RecipeIngredientQuantities'].apply(parse_r_list)
 df['Images'] = df['Images'].apply(parse_r_list)
+df['RecipeInstructions'] = df['RecipeInstructions'].apply(parse_r_list)
 
 # --- 3. App Setup ---
 app = dash.Dash(__name__, 
@@ -87,16 +100,29 @@ app.layout = html.Div(style={"backgroundColor": COLORS["background"], "minHeight
 ])
 
 # --- 4. Page Layouts ---
-
 def recipe_finder_layout():
     categories = ["All"] + sorted(df['RecipeCategory'].dropna().unique().tolist())
     return dbc.Container([
         # --- Store Selection Modal ---
         dbc.Modal([
             dbc.ModalHeader(dbc.ModalTitle("Select Your Kroger Store")),
-            dbc.ModalBody(id="store-selector-body"), # This will be filled with store buttons
+            dbc.ModalBody(id="store-selector-body"),
         ], id="store-modal", is_open=False, size="lg"),
 
+        # --- Store Warning Toast ---
+        html.Div([
+            dbc.Toast(
+                "Please enter your zip code and select a store first! 📍",
+                id="store-warning-toast",
+                header="Store Required",
+                is_open=False,
+                dismissable=True,
+                duration=4000,
+                icon="danger",
+                style={"position": "fixed", "top": 66, "right": 10, "width": 350, "zIndex": 9999},
+            ),
+        ]),
+        
         dbc.Row([
             dbc.Col([
                 html.H1("✨ Cooking Helper", style={"color": COLORS["primary"], "fontWeight": "600", "marginTop": "30px"}),
@@ -104,26 +130,45 @@ def recipe_finder_layout():
             ], width=9),
             dbc.Col(dbc.Button("🛒 My Cart", href="/cart", style={"backgroundColor": COLORS["secondary"], "border": "none", "borderRadius": "20px", "marginTop": "40px"}), width=3)
         ]),
+
         dbc.Row([
+            # --- Sidebar Column ---
+            # --- Sidebar Column ---
             dbc.Col([
                 html.Div(style={"backgroundColor": COLORS["white"], "padding": "20px", "borderRadius": "20px", "boxShadow": "0 4px 6px rgba(0,0,0,0.05)"}, children=[
-                    html.H5("Filter"),
-                    dbc.Input(id="search-query", placeholder="Search ingredients...", style={"borderRadius": "10px"}),
-                    dcc.Dropdown(id="category-dropdown", options=categories, value="All", className="mt-3"),
                     
-                    # --- NEW: Zip Code Search ---
-                    html.Hr(),
-                    html.H6("📍 Store Location", className="mt-3"),
-                    dbc.Input(id="zip-input", placeholder="Enter Zip Code", type="number", style={"borderRadius": "10px"}),
-                    dbc.Button("Find Stores", id="find-stores-btn", color="info", size="sm", className="mt-2 w-100", style={"borderRadius": "10px"}),
-                    html.Div(id="selected-store-display", className="mt-2 small text-success", style={"fontWeight": "bold"}),
+                    # --- 📍 STORE LOCATION SECTION ---
+                    html.H5("📍 Store Location", style={"color": COLORS["text"]}),
                     
-                    html.Div(id="recipe-count", className="mt-2 text-muted", style={"fontSize": "0.8rem"})
+                    # This container holds the input. We hide/show it via CSS.
+                    html.Div(id="zip-container", children=[
+                        dbc.Input(id="zip-input", placeholder="Enter Zip Code", type="number", style={"borderRadius": "10px"}, className="mt-2"),
+                        dbc.Button("Find Stores", id="find-stores-btn", color="info", size="sm", className="mt-2 w-100", 
+                                   style={"borderRadius": "10px", "backgroundColor": COLORS["secondary"], "border": "none"}),
+                    ]),
+                    
+                    # This container holds the "Change" button and the selected name.
+                    html.Div(id="change-loc-container", style={"display": "none"}, children=[
+                        dbc.Button("🔄 Change Location", id="change-loc-btn", color="secondary", outline=True, size="sm", className="mt-2 w-100", 
+                                   style={"borderRadius": "10px"}),
+                        html.Div(id="selected-store-display", className="mt-2 small text-success", style={"fontWeight": "bold"}),
+                    ]),
+                    
+                    html.Hr(className="my-4"), 
+
+                    # --- 🔍 FILTER SECTION ---
+                    html.H5("Filter Recipes", style={"color": COLORS["text"]}),
+                    dbc.Input(id="search-query", placeholder="Search ingredients...", style={"borderRadius": "10px"}, className="mt-2"),
+                    dcc.Dropdown(id="category-dropdown", options=categories, value="All", className="mt-3", style={"borderRadius": "10px"}),
+                    html.Div(id="recipe-count", className="mt-3 text-muted", style={"fontSize": "0.8rem"})
                 ])
             ], width=3),
+            
+            # --- Recipe Display Area ---
             dbc.Col(html.Div(id="recipe-display-area"), width=9)
         ])
     ])
+    
 
 def shopping_cart_layout():
     return dbc.Container([
@@ -141,6 +186,43 @@ def shopping_cart_layout():
     ])
 
 # --- 5. Callbacks ---
+
+@callback(
+    Output("zip-container", "style"),
+    Output("change-loc-container", "style"),
+    Output("store-id-store", "data", allow_duplicate=True), 
+    Input("change-loc-btn", "n_clicks"),
+    Input("store-id-store", "data"),
+    prevent_initial_call=True
+)
+def manage_location_ui(change_clicks, store_id):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return dash.no_update
+    
+    triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    # CASE 1: User wants to change location
+    if triggered_id == "change-loc-btn":
+        # Show input, Hide change button, Clear store data
+        return {"display": "block"}, {"display": "none"}, None
+    
+    # CASE 2: A store has been selected (store_id is updated)
+    if store_id:
+        # Hide input, Show change button
+        return {"display": "none"}, {"display": "block"}, dash.no_update
+
+    # Default State
+    return {"display": "block"}, {"display": "none"}, dash.no_update
+
+def toggle_location_button(store_id):
+    if not store_id:
+        # Initial State: Show zip input, blue button
+        return {"display": "block"}, "Find Stores", "info", False
+    
+    # Selected State: Hide zip input, turn button into "Change Location"
+    return {"display": "none"}, "🔄 Change Location", "secondary", True
+    
 
 @callback(Output('page-content', 'children'), Input('url', 'pathname'))
 def display_page(pathname):
@@ -187,16 +269,29 @@ def update_recipes(search, cat):
     Output("store-modal", "is_open"),
     Output("store-selector-body", "children"),
     Input("find-stores-btn", "n_clicks"),
-    State("zip-input", "value"),
+    State("zip-input", "value"), # This ID must always exist in the layout!
     prevent_initial_call=True
 )
 def find_stores(n_clicks, zip_code):
-    if not zip_code: return False, ""
+    # If the user clicked "Change Location", zip_code will still 
+    # hold the last value entered.
+    if not zip_code:
+        return True, "Please enter a zip code first."
     
     kroger = KrogerAPI()
     kroger.authorization.get_token_with_client_credentials("product.compact")
+    
+    # Radius set to 10 miles as per your current logic
     locations = kroger.location.search_locations(zip_code=zip_code, radius_in_miles=10, limit=5)
     
+    # --- CHECK IF STORES EXIST ---
+    if not locations.get("data") or len(locations["data"]) == 0:
+        return True, html.Div([
+            html.P("Your zip code does not have any Kroger stores close to you. Please enter a different zip code!", 
+                   style={"color": "red", "fontWeight": "bold", "textAlign": "center"})
+        ])
+    
+    # --- IF STORES EXIST, CREATE CARDS ---
     store_options = []
     for loc in locations.get("data", []):
         addr = loc['address']
@@ -206,7 +301,9 @@ def find_stores(n_clicks, zip_code):
                 dbc.CardBody([
                     html.H6(f"{loc['chain'].capitalize()} - {loc['name']}"),
                     html.P(full_addr, className="small text-muted"),
-                    dbc.Button("Select This Store", id={'type': 'select-store-btn', 'id': loc['locationId'], 'name': loc['name']}, color="primary", size="sm")
+                    dbc.Button("Select This Store", 
+                               id={'type': 'select-store-btn', 'id': loc['locationId'], 'name': loc['name']}, 
+                               color="primary", size="sm")
                 ])
             ], className="mb-2")
         )
@@ -230,35 +327,58 @@ def save_store(n_clicks):
     selected_name = button_id['name']
     
     return selected_id, False, f"📍 {selected_name}"
-
 @callback(
     Output('cart-store', 'data', allow_duplicate=True),
-    Output('url', 'pathname'),
+    Output('url', 'pathname', allow_duplicate=True),
+    Output('store-warning-toast', 'is_open'),
     Input({'type': 'add-btn', 'index': ALL}, 'n_clicks'),
     State('cart-store', 'data'),
-    State('store-id-store', 'data'), # Access the saved Store ID
+    State('store-id-store', 'data'),
     prevent_initial_call=True
 )
-def add_to_cart(n_clicks, cart, store_id):
+def add_to_cart(n_clicks, cart_data, store_id):
     ctx = dash.callback_context
-    if not ctx.triggered or not any(n_clicks): return cart, dash.no_update
+    if not ctx.triggered or not any(n_clicks): 
+        # Return: cart_data, no_update (url), False (toast)
+        return cart_data, dash.no_update, False
     
-    # Fallback to a default ID if they haven't picked one yet
-    loc_id = store_id if store_id else "01400394" 
-    
+    # 1. CHECK FOR STORE SELECTION
+    if not store_id:
+        # Return: cart_data, no_update (url), True (SHOW TOAST)
+        return cart_data, dash.no_update, True
+
+    # 2. INITIALIZE DATA STRUCTURE
+    if not cart_data or 'items' not in cart_data:
+        cart_data = {'items': {}, 'recipes': []}
+
+    # 3. IDENTIFY RECIPE
     idx = eval(ctx.triggered[0]['prop_id'].split('.')[0])['index']
-    ingredients = df.iloc[idx]['RecipeIngredientParts']
+    recipe_row = df.iloc[idx]
     
-    # get_kroger_pricing to accept the location_id directly
-    real_prices = get_kroger_pricing_with_id(ingredients, loc_id)
+    # 4. SAVE RECIPE DETAILS
+    recipe_info = {
+        "name": recipe_row['Name'],
+        "ingredients": list(zip(recipe_row['RecipeIngredientQuantities'], recipe_row['RecipeIngredientParts'])),
+        "instructions": recipe_row['RecipeInstructions']
+    }
+    
+    # Avoid duplicates
+    if recipe_info['name'] not in [r['name'] for r in cart_data['recipes']]:
+        cart_data['recipes'].append(recipe_info)
+
+    # 5. FETCH KROGER PRICING
+    # We already checked store_id exists above, so we use it here
+    real_prices = get_kroger_pricing_with_id(recipe_row['RecipeIngredientParts'], store_id)
     
     for ing, data in real_prices.items():
-        if ing not in cart:
-            cart[ing] = {"description": data['description'], "price": data['price'], "qty": 1}
+        if ing not in cart_data['items']:
+            cart_data['items'][ing] = {"description": data['description'], "price": data['price'], "qty": 1}
         else:
-            cart[ing]["qty"] += 1
+            cart_data['items'][ing]["qty"] += 1
             
-    return cart, '/cart'
+    # 6. FINAL RETURN (Success)
+    # Return: updated cart, redirect to cart page, False (hide/keep toast closed)
+    return cart_data, '/cart', False
 
 @callback(
     Output('cart-store', 'data', allow_duplicate=True),
@@ -271,6 +391,7 @@ def clear_cart(n_clicks):
     return dash.no_update
 
 # INTERACTIVE CART logic
+
 @callback(
     Output('cart-store', 'data'),
     Input({'type': 'cart-item-btn', 'action': ALL, 'item': ALL}, 'n_clicks'),
@@ -280,15 +401,22 @@ def clear_cart(n_clicks):
 def update_cart_quantities(n_clicks, cart):
     ctx = dash.callback_context
     if not ctx.triggered or not any(n_clicks): return cart
+    
     btn_id = json.loads(ctx.triggered[0]['prop_id'].split('.')[0])
     action, item_key = btn_id['action'], btn_id['item']
     
-    if item_key in cart:
-        if action == 'plus': cart[item_key]['qty'] += 1
+    # Target the 'items' sub-dictionary
+    if 'items' in cart and item_key in cart['items']:
+        if action == 'plus': 
+            cart['items'][item_key]['qty'] += 1
         elif action == 'minus':
-            if cart[item_key]['qty'] > 1: cart[item_key]['qty'] -= 1
-            else: del cart[item_key]
-        elif action == 'delete': del cart[item_key]
+            if cart['items'][item_key]['qty'] > 1: 
+                cart['items'][item_key]['qty'] -= 1
+            else: 
+                del cart['items'][item_key]
+        elif action == 'delete': 
+            del cart['items'][item_key]
+            
     return cart
 
 # RENDER CART logic
@@ -296,14 +424,30 @@ def update_cart_quantities(n_clicks, cart):
     Output('cart-container', 'children'),
     Input('cart-store', 'data')
 )
-def render_cart(cart):
-    if not cart: return html.Div("Your basket is empty! ✨", className="text-center mt-5")
+def render_cart(cart_data):
+    if not cart_data or not cart_data.get('items'): 
+        return html.Div("Your basket is empty! ✨", className="text-center mt-5")
     
+    # --- Part A: Recipe Reference Section ---
+    recipe_sections = []
+    for recipe in cart_data.get('recipes', []):
+        recipe_sections.append(html.Div(style={"marginBottom": "30px", "borderBottom": f"1px solid {COLORS['background']}", "paddingBottom": "20px"}, children=[
+            html.H3(f"📖 {recipe['name']}", style={"color": COLORS["text"]}),
+            dbc.Row([
+                dbc.Col([
+                    html.H6("Original Ingredients", style={"color": COLORS["primary"]}),
+                    html.Ul([html.Li(f"{q} {i}", style={"fontSize": "0.85rem"}) for q, i in recipe['ingredients']])
+                ], width=4),
+                dbc.Col([
+                    html.H6("Instructions", style={"color": COLORS["primary"]}),
+                    html.Ol([html.Li(step, style={"fontSize": "0.85rem", "marginBottom": "5px"}) for step in recipe['instructions']])
+                ], width=8)
+            ])
+        ]))
+
+    # --- Part B: Pricing Table ---
     table_rows, grand_total = [], 0
-    for item, info in cart.items():
-        # SAFETY CHECK: If info is not a dictionary (old data), skip it or fix it
-        if not isinstance(info, dict): continue
-        
+    for item, info in cart_data['items'].items():
         desc = info.get('description', 'Kroger Item')
         price = info.get('price', 0.0)
         qty = info.get('qty', 1)
@@ -329,11 +473,18 @@ def render_cart(cart):
         html.Td(f"${grand_total:.2f}", style={"fontWeight": "700", "color": COLORS["primary"], "fontSize": "1.2rem", "textAlign": "right"}),
         html.Td("")
     ]))
-    
-    return dbc.Table([
+
+    pricing_table = dbc.Table([
         html.Thead(html.Tr([html.Th("Item"), html.Th("Qty", className="text-center"), html.Th("Price", className="text-end"), html.Th("Subtotal", className="text-end"), html.Th("")])),
         html.Tbody(table_rows)
     ], borderless=True, hover=True)
+
+    return html.Div([
+        html.Div(recipe_sections),
+        html.Hr(style={"margin": "40px 0", "borderTop": f"2px solid {COLORS['primary']}"}),
+        html.H3("🛒 Kroger Price Summary", style={"marginBottom": "20px"}),
+        pricing_table
+    ])
 
 if __name__ == "__main__":
     app.run(debug=True)
