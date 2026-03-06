@@ -19,7 +19,6 @@ from api.kroger_store_locator import KrogerStoreLocator
 
 root_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(root_dir))
-from api.shopping_cart import main
 
 def get_kroger_pricing_with_id(ingredient_list, location_id):
     kroger = KrogerAPI()
@@ -41,12 +40,6 @@ def get_kroger_pricing_with_id(ingredient_list, location_id):
         else:
             results[ingredient] = {"description": "Not available", "price": 0.0}
     return results
-        
-    if valid_options:
-        # Sort by price and pick cheapest 
-        ingredient_results[ingredient] = sorted(valid_options, key=lambda x: x['price'])[0]
-            
-    return ingredient_results
 
 # --- 1. Custom Aesthetic Styles ---
 COLORS = {
@@ -296,14 +289,14 @@ def find_stores(n_clicks, zip_code):
     # kroger = KrogerAPI()
     # kroger.authorization.get_token_with_client_credentials("product.compact")
     # locations = kroger.location.search_locations(zip_code=zip_code, radius_in_miles=10, limit=5)
-    kroger = KrogerAPI()
-    kroger.authorization.get_token_with_client_credentials("product.compact")
+    # kroger = KrogerAPI()
+    # kroger.authorization.get_token_with_client_credentials("product.compact")
     
     # Radius set to 10 miles as per your current logic
-    locations = kroger.location.search_locations(zip_code=zip_code, radius_in_miles=10, limit=5)
+    # locations = kroger.location.search_locations(zip_code=zip_code, radius_in_miles=10, limit=5)
     
     # --- CHECK IF STORES EXIST ---
-    if not locations.get("data") or len(locations["data"]) == 0:
+    if len(store_locations) == 0:
         return True, html.Div([
             html.P("Your zip code does not have any Kroger stores close to you. Please enter a different zip code!", 
                    style={"color": "red", "fontWeight": "bold", "textAlign": "center"})
@@ -317,12 +310,12 @@ def find_stores(n_clicks, zip_code):
                 dbc.CardBody([
                     html.H6(f"{store['chain'].capitalize()} - {store['name']}"),
                     html.P(store['address'], className="small text-muted"),
-                    dbc.Button("Select This Store", id={'type': 'select-store-btn', 'id': store['location_id'], 'name': store['name']}, color="primary", size="sm")
-                    html.H6(f"{loc['chain'].capitalize()} - {loc['name']}"),
-                    html.P(full_addr, className="small text-muted"),
-                    dbc.Button("Select This Store", 
-                               id={'type': 'select-store-btn', 'id': loc['locationId'], 'name': loc['name']}, 
-                               color="primary", size="sm")
+                    dbc.Button("Select This Store", id={'type': 'select-store-btn', 'id': store['location_id'], 'name': store['name']}, color="primary", size="sm"),
+                    # html.H6(f"{store['chain'].capitalize()} - {store['name']}"),
+                    # html.P(store['address'], className="small text-muted"),
+                    # dbc.Button("Select This Store", 
+                    #            id={'type': 'select-store-btn', 'id': store['location_id'], 'name': store['name']}, 
+                    #            color="primary", size="sm")
                 ])
             ], className="mb-2")
         )
@@ -377,7 +370,7 @@ def add_to_cart(n_clicks, cart_data, store_id):
     ingredients = df.iloc[idx]['RecipeIngredientParts']
     
     # get_kroger_pricing to accept the location_id directly
-    shopping_cart = ShoppingCart(loc_id)
+    shopping_cart = ShoppingCart(store_id)
     print(ingredients)
     ingredients_list = shopping_cart.price_ingredients(ingredients)
     real_prices = shopping_cart.get_cheapest_ingredients(ingredients_list)
