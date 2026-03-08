@@ -1,22 +1,26 @@
 """
-Utility module that loads in the Kroger API secrets
-Used by kroger_shopping_cart and kroger_store_locator
+Utility module that loads in the Kroger API secrets.
+
+Used by kroger_shopping_cart and kroger_store_locator.
 """
-from dotenv import load_dotenv
 from pathlib import Path
+from dotenv import load_dotenv
 from kroger_api.utils.env import load_and_validate_env
 
-_ENV_LOADED = False
+ENV_LOADED = False
 
 
 def init_kroger_env() -> None:
     """
     Load and validate Kroger credentials exactly once.
-    Safe to call multiple times.
-    """
-    global _ENV_LOADED
 
-    if _ENV_LOADED:
+    Safe to call multiple times.
+
+    :return: None
+    """
+    global ENV_LOADED # pylint: disable=global-statement
+
+    if ENV_LOADED:
         return
 
     # project_root/.env
@@ -30,4 +34,4 @@ def init_kroger_env() -> None:
 
     # print("CREDENTIALS LOADED")
 
-    _ENV_LOADED = True
+    ENV_LOADED = True

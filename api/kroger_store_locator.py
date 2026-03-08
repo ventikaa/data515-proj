@@ -46,3 +46,15 @@ class KrogerStoreLocator:
             })
 
         return stores
+
+    def set_radius(self, radius: int):
+        """
+        Changes the radius for the store locator
+        """
+        self.radius = radius
+
+    def set_limit(self, limit: int):
+        """
+        Changes the radius for the store locator
+        """
+        self.limit = limit
