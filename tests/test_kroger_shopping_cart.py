@@ -10,6 +10,13 @@ from api import kroger_shopping_cart
 class TestKrogerShoppingCart(unittest.TestCase):
     """Test cases for the ShoppingCart class."""
 
+    def test_wrong_input_initialization(self):
+        """Improper zip code format"""
+        location_id = 123456
+
+        with self.assertRaises(ValueError):
+            kroger_shopping_cart.ShoppingCart(location_id)
+
     @patch("api.kroger_shopping_cart.init_kroger_env")
     @patch("api.kroger_shopping_cart.KrogerAPI")
     def test_price_ingredients(self, mock_kroger_api, mock_init_env):

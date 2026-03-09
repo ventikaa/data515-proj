@@ -20,26 +20,26 @@ from api.kroger_store_locator import KrogerStoreLocator
 root_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(root_dir))
 
-def get_kroger_pricing_with_id(ingredient_list, location_id):
-    kroger = KrogerAPI()
-    kroger.authorization.get_token_with_client_credentials("product.compact")
+# def get_kroger_pricing_with_id(ingredient_list, location_id):
+#     kroger = KrogerAPI()
+#     kroger.authorization.get_token_with_client_credentials("product.compact")
     
-    results = {}
-    for ingredient in ingredient_list:
-        products = kroger.product.search_products(term=ingredient, location_id=location_id, limit=5)
-        valid = []
-        for p in products.get("data", []):
-            desc = p['description']
-            for item in p['items']:
-                price = item.get('price', {}).get('regular')
-                if price and item.get('inventory', {}).get('stockLevel') != "TEMPORARILY_OUT_OF_STOCK":
-                    valid.append({"description": desc, "price": float(price)})
+#     results = {}
+#     for ingredient in ingredient_list:
+#         products = kroger.product.search_products(term=ingredient, location_id=location_id, limit=5)
+#         valid = []
+#         for p in products.get("data", []):
+#             desc = p['description']
+#             for item in p['items']:
+#                 price = item.get('price', {}).get('regular')
+#                 if price and item.get('inventory', {}).get('stockLevel') != "TEMPORARILY_OUT_OF_STOCK":
+#                     valid.append({"description": desc, "price": float(price)})
         
-        if valid:
-            results[ingredient] = sorted(valid, key=lambda x: x['price'])[0]
-        else:
-            results[ingredient] = {"description": "Not available", "price": 0.0}
-    return results
+#         if valid:
+#             results[ingredient] = sorted(valid, key=lambda x: x['price'])[0]
+#         else:
+#             results[ingredient] = {"description": "Not available", "price": 0.0}
+#     return results
 
 # --- 1. Custom Aesthetic Styles ---
 COLORS = {
@@ -284,7 +284,7 @@ def find_stores(n_clicks, zip_code):
     if not zip_code:
         return True, "Please enter a zip code first."
     
-    storeLocator = KrogerStoreLocator(zip_code)
+    storeLocator = KrogerStoreLocator(str(zip_code))
     store_locations = storeLocator.get_stores()
     # kroger = KrogerAPI()
     # kroger.authorization.get_token_with_client_credentials("product.compact")
@@ -371,10 +371,9 @@ def add_to_cart(n_clicks, cart_data, store_id):
     
     # get_kroger_pricing to accept the location_id directly
     shopping_cart = ShoppingCart(store_id)
-    print(ingredients)
+    # print(ingredients)
     ingredients_list = shopping_cart.price_ingredients(ingredients)
     real_prices = shopping_cart.get_cheapest_ingredients(ingredients_list)
-    # real_prices = get_kroger_pricing_with_id(ingredients, loc_id)
     recipe_row = df.iloc[idx]
     
     # 4. SAVE RECIPE DETAILS
@@ -390,14 +389,12 @@ def add_to_cart(n_clicks, cart_data, store_id):
 
     # 5. FETCH KROGER PRICING
     # We already checked store_id exists above, so we use it here
-    real_prices = get_kroger_pricing_with_id(recipe_row['RecipeIngredientParts'], store_id)
     
-    cart = {} # Reset cart
     for ing, data in real_prices.items():
         if ing not in cart_data['items']:
             cart_data['items'][ing] = {"description": data['description'], "price": data['price'], "qty": 1}
-        else:
-            cart_data['items'][ing]["qty"] += 1
+        # else:
+        #     cart_data['items'][ing]["qty"] += 1
             
     # 6. FINAL RETURN (Success)
     # Return: updated cart, redirect to cart page, False (hide/keep toast closed)

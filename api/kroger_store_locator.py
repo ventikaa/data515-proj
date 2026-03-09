@@ -14,6 +14,9 @@ class KrogerStoreLocator:
     def __init__(self, zip_code: str, radius: int = 10, limit: int = 5):
         init_kroger_env()
 
+        if len(zip_code) != 5:
+            raise ValueError("Not a proper 5 digit zip_code")
+
         self.zip_code = zip_code
         self.radius = radius
         self.limit = limit

@@ -10,6 +10,22 @@ from api import kroger_store_locator
 class TestKrogerStoreLocator(unittest.TestCase):
     """Test cases for the KrogerStoreLocator class."""
 
+    def test_wrong_init_input(self):
+        """Test wrong zip_code input in initialization"""
+        zip_code = '123456'
+
+        with self.assertRaises(ValueError):
+            kroger_store_locator.KrogerStoreLocator(zip_code)
+
+    def test_right_init_input(self):
+        """Test proper KrogerStoreLocator initialization"""
+        zip_code = '98034'
+
+        kroger_store = kroger_store_locator.KrogerStoreLocator(zip_code)
+        stores = kroger_store.get_stores()
+
+        self.assertAlmostEqual(5, len(stores))
+
     @patch("api.kroger_store_locator.init_kroger_env")
     @patch("api.kroger_store_locator.KrogerAPI")
     def test_get_stores(self, mock_kroger_api, mock_init_env):

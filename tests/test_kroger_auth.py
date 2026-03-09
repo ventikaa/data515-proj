@@ -17,6 +17,15 @@ class TestKrogerAuth(unittest.TestCase):
             kroger_auth.init_kroger_env()
             self.assertTrue(kroger_auth.ENV_LOADED)
 
+    def test_init_kroger_env_failure(self):
+        """Checking if .env file doesn't have the credentials needed for Kroger API"""
+        kroger_auth.ENV_LOADED = False
+
+        with patch("api.kroger_auth.load_and_validate_env") as mock_validate:
+            mock_validate.side_effect = Exception("Missing credentials")
+
+            with self.assertRaises(Exception):
+                kroger_auth.init_kroger_env()
 
 if __name__ == "__main__":
     unittest.main()
