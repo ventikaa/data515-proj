@@ -17,14 +17,73 @@ class TestKrogerStoreLocator(unittest.TestCase):
         with self.assertRaises(ValueError):
             kroger_store_locator.KrogerStoreLocator(zip_code)
 
-    def test_right_init_input(self):
+    @patch("api.kroger_store_locator.init_kroger_env")
+    @patch("api.kroger_store_locator.KrogerAPI")
+    def test_right_init_input(self, mock_kroger_api, mock_init_env):
         """Test proper KrogerStoreLocator initialization"""
-        zip_code = '98034'
 
-        kroger_store = kroger_store_locator.KrogerStoreLocator(zip_code)
-        stores = kroger_store.get_stores()
+        mock_init_env.return_value = None
 
-        self.assertAlmostEqual(5, len(stores))
+        mock_api_instance = mock_kroger_api.return_value
+        mock_api_instance.location.search_locations.return_value = {
+            "data": [
+                {
+                    "locationId": "store_1",
+                    "chain": "Kroger",
+                    "name": "Kroger Totem Lake",
+                    "address": {
+                        "addressLine1": "12500 120th Ave NE",
+                        "city": "Kirkland",
+                        "state": "WA"
+                    }
+                },
+                {
+                    "locationId": "store_2",
+                    "chain": "Kroger",
+                    "name": "Kroger Downtown",
+                    "address": {
+                        "addressLine1": "123 Main St",
+                        "city": "Seattle",
+                        "state": "WA"
+                    }
+                },
+                {
+                    "locationId": "store_3",
+                    "chain": "Kroger",
+                    "name": "Kroger Bellevue",
+                    "address": {
+                        "addressLine1": "456 Bellevue Way",
+                        "city": "Bellevue",
+                        "state": "WA"
+                    }
+                },
+                {
+                    "locationId": "store_4",
+                    "chain": "Kroger",
+                    "name": "Kroger Redmond",
+                    "address": {
+                        "addressLine1": "789 Redmond Rd",
+                        "city": "Redmond",
+                        "state": "WA"
+                    }
+                },
+                {
+                    "locationId": "store_5",
+                    "chain": "Kroger",
+                    "name": "Kroger Woodinville",
+                    "address": {
+                        "addressLine1": "321 Wine Country Rd",
+                        "city": "Woodinville",
+                        "state": "WA"
+                    }
+                },
+            ]
+        }
+
+        locator = kroger_store_locator.KrogerStoreLocator("98034")
+        stores = locator.get_stores()
+
+        self.assertEqual(5, len(stores))
 
     @patch("api.kroger_store_locator.init_kroger_env")
     @patch("api.kroger_store_locator.KrogerAPI")
