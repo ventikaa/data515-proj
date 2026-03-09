@@ -24,7 +24,7 @@ class ShoppingCart:
         """
         init_kroger_env()
 
-        if type(store_location_id) != str:
+        if isinstance(store_location_id, str) is False:
             raise ValueError("Store_location_id must be an int")
 
         self.store_location_id = store_location_id
