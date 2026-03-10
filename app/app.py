@@ -43,7 +43,6 @@ def parse_r_list(r_string):
         return result
 
     clean_val = r_string.strip()
-    # Handle "N/A" or empty cases
     if clean_val.upper() == "N/A" or clean_val.lower() in ["character(0)", "none", ""]:
         return result
 
@@ -75,7 +74,6 @@ def get_kroger_pricing_with_id(ingredient_list, location_id):
                                             limit=5)
         valid_products = []
         for p_data in resp.get("data", []):
-            # Extract items to a local loop variable to avoid extra assignments
             for item in p_data.get('items', []):
                 price = item.get('price', {}).get('regular')
                 stock = item.get('inventory', {}).get('stockLevel')
@@ -386,14 +384,12 @@ def find_stores(n_clicks, zip_code):
     """
     if n_clicks is None or n_clicks == 0:
         return False, dash.no_update, dash.no_update
-    # Fix 1: Add a third return value here (dash.no_update)
     if not zip_code:
         return True, "Please enter a zip code first.", dash.no_update
 
     store_locator = KrogerStoreLocator(zip_code)
     store_locations = store_locator.get_stores()
-
-    # Fix 2: Add a third return value here too
+    
     if not store_locations:
         return True, html.Div([
             html.P("No Kroger stores found nearby.",
