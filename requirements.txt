@@ -12,8 +12,15 @@ python-dotenv==1.2.2
 requests==2.32.5
 streamlit==1.55.0
 tqdm==4.67.3
-jupyterlab==4.5.5
-ipykernel==7.2.0
+
+# notebooks
+jupyterlab
+ipykernel
+
+# development
+pytest==9.0.2
+hypothesis==6.151.9
 pylint==4.0.4
 pipreqs==0.5.0
-build
+build==1.4.0
+coverage==7.6.1

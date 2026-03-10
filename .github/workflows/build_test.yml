@@ -27,17 +27,13 @@ jobs:
           auto-update-conda: true
           auto-activate-base: false
 
-      - name: Install development tools
-        run: |
-          conda install --yes coverage pylint
-
       - name: Install project
         run: |
           pip install -e .
 
       - name: Run unit tests
         run: |
-          coverage run -m unittest discover -s tests -p "test_*.py"
+          coverage run -m pytest
           coverage report
           coverage lcov
 
