@@ -2,10 +2,10 @@
 Cooking Helper Dash Application.
 Finds recipes and fetches real-time Kroger prices based on user location.
 """
-
 import json
 import re
 import sys
+from itertools import zip_longest
 from pathlib import Path
 
 import dash
@@ -14,45 +14,55 @@ import pandas as pd
 from dash import ALL, Input, Output, State, callback, dcc, html
 from kroger_api import KrogerAPI
 
-# --- Setup System Path ---
-ROOT_DIR = Path(__file__).resolve().parent.parent
-sys.path.append(str(ROOT_DIR))
 # Internal API imports
 from api.kroger_shopping_cart import ShoppingCart
 from api.kroger_store_locator import KrogerStoreLocator
 
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
+
 # --- 1. Custom Aesthetic Styles ---
 COLORS = {
-    "background": "#FFF9F5",  # Soft Cream
-    "primary": "#FF8A8A",     # Muted Coral
-    "secondary": "#95BDFF",   # Pastel Blue
-    "accent": "#B4E4FF",      # Baby Blue
-    "text": "#4A4A4A",        # Soft Charcoal
+    "background": "#FFF9F5",
+    "primary": "#FF8A8A",
+    "secondary": "#95BDFF",
+    "accent": "#B4E4FF",
+    "text": "#4A4A4A",
     "white": "#FFFFFF"
 }
 FONT_STYLE = {"fontFamily": "'Quicksand', sans-serif"}
 
 
 def parse_r_list(r_string):
-    """Parses R-formatted strings from the CSV into Python lists."""
-    if pd.isna(r_string) or not isinstance(r_string, str) or r_string == "character(0)":
-        return []
+    """Robustly extracts multiple URLs or items, handling commas inside links."""
+    result = []
+    if isinstance(r_string, list):
+        return r_string
+    if pd.isna(r_string) or not isinstance(r_string, str):
+        return result
 
-    content = re.sub(r'^c\(', '', r_string)
-    content = re.sub(r'\)$', '', content)
+    clean_val = r_string.strip()
+    # Handle "N/A" or empty cases
+    if clean_val.upper() == "N/A" or clean_val.lower() in ["character(0)", "none", ""]:
+        return result
 
-    # This finds all text inside quotes
-    parts = re.findall(r'"([^"]*)"', content)
+    if clean_val.startswith('c('):
+        content = re.sub(r'^c\(', '', clean_val)
+        content = re.sub(r'\)$', '', content)
+        parts = re.findall(r'"([^"]*)"', content)
+        result = [p.strip() for p in parts if p.strip()]
+    elif ", http" in clean_val:
+        parts = clean_val.split(", http")
+        result = [parts[0].strip()] + ["http" + p.strip() for p in parts[1:]]
+    elif clean_val.startswith('http'):
+        result = [clean_val]
+    else:
+        result = [p.strip() for p in clean_val.split(',') if p.strip()]
 
-    # Removes any steps that are just commas, spaces, or empty
-    parts = [p.strip() for p in parts if p.strip() and p.strip() != ","]
-    parts = [p.replace('\\', '').strip() for p in parts if p.strip() and p.strip() != ","]
-    if not parts and content.strip():
-        return [content.strip()]
+    return result
 
-    return parts
-
-
+# pylint: disable=too-many-locals
 def get_kroger_pricing_with_id(ingredient_list, location_id):
     """Fetches pricing for ingredients at a specific Kroger location."""
     kroger = KrogerAPI()
@@ -60,26 +70,80 @@ def get_kroger_pricing_with_id(ingredient_list, location_id):
 
     results = {}
     for ingredient in ingredient_list:
-        products = kroger.product.search_products(term=ingredient, location_id=location_id, limit=5)
-        valid = []
-        for p in products.get("data", []):
-            desc = p['description']
-            for item in p['items']:
+        resp = kroger.product.search_products(term=ingredient,
+                                            location_id=location_id,
+                                            limit=5)
+        valid_products = []
+        for p_data in resp.get("data", []):
+            # Extract items to a local loop variable to avoid extra assignments
+            for item in p_data.get('items', []):
                 price = item.get('price', {}).get('regular')
                 stock = item.get('inventory', {}).get('stockLevel')
-                if price and stock != "TEMPORARILY_OUT_OF_STOCK":
-                    valid.append({"description": desc, "price": float(price)})
 
-        if valid:
-            results[ingredient] = sorted(valid, key=lambda x: x['price'])[0]
+                if price and stock != "TEMPORARILY_OUT_OF_STOCK":
+                    valid_products.append({
+                        "description": p_data['description'], 
+                        "price": float(price)
+                    })
+
+        if valid_products:
+            # Sort and pick cheapest in one line
+            results[ingredient] = min(valid_products, key=lambda x: x['price'])
         else:
             results[ingredient] = {"description": "Not available", "price": 0.0}
     return results
 
+def make_recipe_card(row, idx):
+    """Helper to build a single recipe card to reduce local variable count in main callback."""
+    ingredients = parse_r_list(row['RecipeIngredientParts'])
+    quantities = parse_r_list(row['RecipeIngredientQuantities'])
+    image_urls = parse_r_list(row['Images'])
+
+    ing_items = []
+    for q, p in zip_longest(quantities, ingredients, fillvalue=""):
+        q_raw = str(q).strip() if q else ""
+        is_na = q_raw.lower() in ["na", "n/a", "nan", "null"] or not q_raw
+        q_str = q_raw if not is_na else ""
+        p_str = str(p).strip() if p else ""
+        if p_str:
+            display = f"{q_str} {p_str}" if q_str else p_str
+            ing_items.append(html.Li(display, style={"fontSize": "0.85rem"}))
+
+    has_img = image_urls and len(image_urls) > 0 and str(image_urls[0]).startswith('http')
+    col_w = 4 if has_img else 6
+    img_col = dbc.Col([
+        html.Img(src=image_urls[0],
+                 style={"width": "100%", "borderRadius": "15px",
+                        "maxHeight": "220px", "objectFit": "cover"})
+    ], width=4) if has_img else None
+
+    row_content = [
+        dbc.Col([
+            html.H6("Ingredients", style={"color": COLORS["primary"]}),
+            html.Ul(ing_items[:10])
+        ], width=col_w),
+        dbc.Col([
+            html.H6("About", style={"color": COLORS["primary"]}),
+            html.P(row['Description'], style={"fontSize": "0.85rem"})
+        ], width=col_w)
+    ]
+    if img_col:
+        row_content.append(img_col)
+
+    return html.Div(style={"backgroundColor": COLORS["white"], "borderRadius": "25px",
+                           "padding": "25px", "marginBottom": "25px",
+                           "boxShadow": "0 4px 15px rgba(0,0,0,0.05)"},
+                    children=[
+                        html.H4(row['Name'], style={"color": COLORS["text"], "fontWeight": "600"}),
+                        dbc.Row(row_content),
+                        dbc.Button("✨ Calculate Price", id={'type': 'add-btn', 'index': idx},
+                                   style={"backgroundColor": COLORS["primary"], "border": "none",
+                                          "borderRadius": "15px", "marginTop": "10px"})
+                    ])
 
 # --- Load Data ---
 BASE_DIR = Path(__file__).resolve().parent.parent
-CSV_PATH = BASE_DIR / "data" / "data.csv"
+CSV_PATH = BASE_DIR / "data" / "recipes_food_FINAL_CLEANED.csv"
 DF = pd.read_csv(CSV_PATH)
 
 DF['RecipeIngredientParts'] = DF['RecipeIngredientParts'].apply(parse_r_list)
@@ -99,6 +163,8 @@ app.layout = html.Div(style={"backgroundColor": COLORS["background"],
                              "minHeight": "100vh", **FONT_STYLE}, children=[
     dcc.Store(id='cart-store', data={}, storage_type='session'),
     dcc.Store(id='store-id-store', data=None, storage_type='session'),
+    dcc.Store(id='zip-code-store', data=None, storage_type='session'),
+    dcc.Store(id='store-name-store', data=None, storage_type='session'),
 
     dcc.Loading(
         id="global-loading",
@@ -190,7 +256,8 @@ def recipe_finder_layout():
                     dbc.Input(id="search-query",
                               placeholder="Search ingredients...",
                               style={"borderRadius": "10px"},
-                              className="mt-2"),
+                              className="mt-2",
+                              debounce=True),
                     dcc.Dropdown(id="category-dropdown",
                                  options=categories,
                                  value="All",
@@ -244,27 +311,33 @@ def shopping_cart_layout():
 @callback(
     Output("zip-container", "style"),
     Output("change-loc-container", "style"),
-    Output("store-id-store", "data", allow_duplicate=True),
-    Input("change-loc-btn", "n_clicks"),
+    Output("zip-input", "value"),
+    Output("selected-store-display", "children", allow_duplicate=True),
     Input("store-id-store", "data"),
-    prevent_initial_call=True
+    Input("change-loc-btn", "n_clicks"),
+    State("zip-code-store", "data"),
+    State("store-name-store", "data"),
+    prevent_initial_call='initial_duplicate'
 )
-def manage_location_ui(_, store_id):
-    """Toggles visibility between zip code input and chosen store display."""
+def manage_location_ui(store_id, _change_clicks, saved_zip, saved_name):
+    """Manages the persistence and visibility of the store location interface.
+    
+    Handles toggling between the zip code input and selected store display, 
+    ensuring state is maintained across page navigation."""
     ctx = dash.callback_context
-    if not ctx.triggered:
-        return dash.no_update
+    triggered_id = ctx.triggered[0]['prop_id'].split('.')[0] if ctx.triggered else None
 
-    triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
-
+    # Logic for clicking "Change Location"
     if triggered_id == "change-loc-btn":
-        return {"display": "block"}, {"display": "none"}, None
+        return {"display": "block"}, {"display": "none"}, saved_zip, ""
 
+    # Logic for Page Load / Store already selected
     if store_id:
-        return {"display": "none"}, {"display": "block"}, dash.no_update
+        display_name = f"📍 {saved_name}" if saved_name else "📍 Store Selected"
+        return {"display": "none"}, {"display": "block"}, saved_zip, display_name
 
-    return {"display": "block"}, {"display": "none"}, dash.no_update
-
+    # Default (No store selected)
+    return {"display": "block"}, {"display": "none"}, saved_zip, ""
 
 def toggle_location_button(store_id):
     """Returns style and label configurations based on store selection status."""
@@ -288,73 +361,44 @@ def display_page(pathname):
     Input("category-dropdown", "value")
 )
 def update_recipes(search, cat):
-    """Filters recipe dataframe and renders cards based on user search."""
-    filt = DF.head(30).copy()
+    """Filters the recipe dataset and generates cards using the helper function."""
+    filt = DF.copy()
     if cat and cat != "All":
         filt = filt[filt['RecipeCategory'] == cat]
     if search:
         filt = filt[filt['Name'].str.contains(search, case=False) |
                     filt['RecipeIngredientParts'].astype(str).str.contains(search, case=False)]
 
-    cards = []
-    for idx, row in filt.iterrows():
-        ing_items = []
-        for q, p in zip(row['RecipeIngredientQuantities'], row['RecipeIngredientParts']):
-            q_str = str(q).strip() if pd.notna(q) and str(q).lower() != 'nan' else ""
-            ing_items.append(html.Li(f"{q_str} {p}" if q_str else p,
-                                     style={"fontSize": "0.85rem"}))
-
-        servings = html.Span(f" 🍽️ {int(row['RecipeServings'])} servings",
-                             style={"fontSize": "0.8rem",
-                                    "color": COLORS["secondary"]}) \
-                             if pd.notna(row['RecipeServings']) else None
-        image_urls = row['Images']
-        col_w, img_col = (4, dbc.Col([html.Img(src=image_urls[0],
-                                               style={"width": "100%",
-                                                      "borderRadius": "15px"})],
-                                     width=4)) if image_urls else (6, None)
-
-        cards.append(html.Div(style={"backgroundColor": COLORS["white"],
-                                     "borderRadius": "25px", "padding": "20px",
-                                     "marginBottom": "25px",
-                                     "boxShadow": "0 4px 15px rgba(0,0,0,0.05)"},
-                              children=[
-            html.H4(row['Name'], style={"color": COLORS["text"], "fontWeight": "600"}),
-            dbc.Row([
-                dbc.Col([html.H6("Ingredients", style={"color": COLORS["primary"]}),
-                         html.Ul(ing_items[:10])], width=col_w),
-                dbc.Col([html.H6("About", style={"color": COLORS["primary"]}), servings,
-                         html.P(row['Description'],
-                                style={"fontSize": "0.8rem", "marginTop": "5px"})], width=col_w),
-                img_col
-            ]),
-            dbc.Button("✨ Calculate Price", id={'type': 'add-btn', 'index': idx},
-                       style={"backgroundColor": COLORS["primary"], "border": "none",
-                              "borderRadius": "15px", "marginTop": "10px"})
-        ]))
+    cards = [make_recipe_card(row, idx) for idx, row in filt.iterrows()]
     return cards, f"Found {len(filt)} recipes"
-
 
 @callback(
     Output("store-modal", "is_open"),
     Output("store-selector-body", "children"),
+    Output("zip-code-store", "data"),
     Input("find-stores-btn", "n_clicks"),
     State("zip-input", "value"),
     prevent_initial_call=True
 )
-def find_stores(_, zip_code):
-    """Fetches store locations from zip code and renders selection cards."""
+def find_stores(n_clicks, zip_code):
+    """
+    Triggers the Kroger store locator API and populates the selection modal.
+    """
+    if n_clicks is None or n_clicks == 0:
+        return False, dash.no_update, dash.no_update
+    # Fix 1: Add a third return value here (dash.no_update)
     if not zip_code:
-        return True, "Please enter a zip code first."
+        return True, "Please enter a zip code first.", dash.no_update
 
     store_locator = KrogerStoreLocator(zip_code)
     store_locations = store_locator.get_stores()
 
+    # Fix 2: Add a third return value here too
     if not store_locations:
         return True, html.Div([
-            html.P("No Kroger stores found nearby. Try a different zip code!",
+            html.P("No Kroger stores found nearby.",
                    style={"color": "red", "fontWeight": "bold", "textAlign": "center"})
-        ])
+        ]), dash.no_update
 
     store_options = []
     for store in store_locations:
@@ -371,27 +415,30 @@ def find_stores(_, zip_code):
             ], className="mb-2")
         )
 
-    return True, store_options
+    return True, store_options, zip_code
 
 
 @callback(
     Output("store-id-store", "data"),
+    Output("store-name-store", "data"), # Add this
     Output("store-modal", "is_open", allow_duplicate=True),
     Output("selected-store-display", "children"),
     Input({'type': 'select-store-btn', 'id': ALL, 'name': ALL}, 'n_clicks'),
     prevent_initial_call=True
 )
 def save_store(n_clicks):
-    """Saves the selected store ID to the user's session store."""
+    """
+    Captures selected store metadata and stores it in the session and UI.
+    """
     ctx = dash.callback_context
     if not ctx.triggered or not any(n_clicks):
-        return dash.no_update, dash.no_update, dash.no_update
+        return dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
     button_id = json.loads(ctx.triggered[0]['prop_id'].split('.')[0])
     selected_id = button_id['id']
     selected_name = button_id['name']
 
-    return selected_id, False, f"📍 {selected_name}"
+    return selected_id, selected_name, False, f"📍 {selected_name}"
 
 
 @callback(

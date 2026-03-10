@@ -39,8 +39,7 @@ class TestCookingHelper(unittest.TestCase):
             'Images': [[], []]
         })
         mock_df.head.return_value = mock_data
-        
-        # Test search filter
+
         cards, count_msg = update_recipes("Apple", "All")
         self.assertIn("Found 1 recipes", count_msg)
         self.assertEqual(len(cards), 1)
@@ -100,10 +99,10 @@ class TestCookingHelper(unittest.TestCase):
 
         # 2. Wait for Modal and select a store
         dash_duo.wait_for_element("#store-modal", timeout=5)
-        dash_duo.find_element(".btn-primary").click() # Select first store
+         # Select first store
+        dash_duo.find_element(".btn-primary").click()
 
         # 3. Click Calculate Price on the first recipe card
-        # Use a CSS selector that targets your pattern-matching ID
         dash_duo.find_elements("button")[2].click() 
 
         # 4. Assert URL changed and Cart loaded
