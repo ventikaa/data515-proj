@@ -9,10 +9,8 @@ import pandas as pd
 import dash
 import pytest
 from hypothesis import given, strategies as st
-from dash.testing.application_runners import import_app
 
 from app.app import parse_r_list, update_recipes, add_to_cart
-from webdriver_manager.chrome import ChromeDriverManager
 
 # -----------------------------
 # pytest fixtures
