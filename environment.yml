@@ -24,6 +24,9 @@ dependencies:
   - pylint=4.0.4
   - coverage=7.6.1
 
+  # dash testing dependency
+  - multiprocess
+
   # pip support
   - pip
 
