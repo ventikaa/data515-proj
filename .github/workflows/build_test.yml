@@ -25,17 +25,10 @@ jobs:
           auto-update-conda: true
           auto-activate-base: false
 
-      # Install browser + webdriver for Selenium / Dash tests
-      - name: Install Chrome + driver
+      - name: Install Chromium + driver
         run: |
           sudo apt-get update
-          sudo apt-get install -y chromium-browser chromium-chromedriver
-
-      # Add chromedriver to PATH (important for Selenium)
-      - name: Add chromedriver to PATH
-        run: |
-          echo "/usr/lib/chromium-browser/" >> $GITHUB_PATH
-          echo "/usr/lib/chromium/" >> $GITHUB_PATH
+          sudo apt-get install -y chromium chromium-driver
 
       - name: Install project
         run: |
