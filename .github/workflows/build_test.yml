@@ -39,7 +39,7 @@ jobs:
 
       - name: Lint with pylint
         run: |
-          pylint api app
+          pylint api app tests
 
       - name: Report code coverage to Coveralls
         uses: coverallsapp/github-action@v2
