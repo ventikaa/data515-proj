@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/github/USERNAME/REPO/badge.svg?branch=main)](https://coveralls.io/github/USERNAME/REPO?branch=main)
+
 Project Title: Cooking Helper!
 
 Team Members: 
