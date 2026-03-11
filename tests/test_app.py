@@ -85,3 +85,46 @@ class TestCookingHelper(unittest.TestCase):
         """Ensures the parser never crashes, regardless of the input string."""
         result = parse_r_list(s)
         self.assertIsInstance(result, list)
+
+
+# DISCLAIMER: These integration tests were much more challenging than expected.
+# Ran into MANY challenges trying to work with Selenium,Chromium,Chrome web driver etc.
+# In the future, it'd be great to implement in our github actions/workflow.
+# -----------------------------
+# Dash Integration Tests
+# -----------------------------
+
+# def test_001_layout_loads(dash_duo):
+#     """Verify the main page loads correctly."""
+
+#     dash_duo.start_server(app)
+
+#     # Wait for a stable element in the recipe finder layout
+#     dash_duo.wait_for_element("#search-query", timeout=10)
+
+#     # Confirm key UI pieces exist
+#     assert dash_duo.find_element("#zip-input")
+#     assert dash_duo.find_element("#find-stores-btn")
+
+
+# def test_full_navigation_flow(dash_duo):
+#     """Simulate user entering zip and opening store selector."""
+
+#     dash_duo.start_server(app)
+
+#     # Wait for page load
+#     dash_duo.wait_for_element("#zip-input", timeout=10)
+
+#     # Enter a zip code
+#     zip_input = dash_duo.find_element("#zip-input")
+#     zip_input.send_keys("45202")
+
+#     # Click find stores
+#     dash_duo.find_element("#find-stores-btn").click()
+
+#     # Modal should appear
+#     dash_duo.wait_for_element("#store-modal", timeout=10)
+
+#     # Verify modal is visible
+#     modal = dash_duo.find_element("#store-modal")
+#     assert modal is not None
