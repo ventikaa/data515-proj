@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/github/USERNAME/REPO/badge.svg?branch=main)](https://coveralls.io/github/USERNAME/REPO?branch=main)
+
 Project Title: Cooking Helper!
 
 Team Members: 
@@ -22,4 +24,4 @@ Key Components
 
 Technologies & Data Sources
 - Kroger Development API
-- Large-scale recipe datasets
+- Large-scale recipe datasets [Link](https://www.kaggle.com/datasets/irkaal/foodcom-recipes-and-reviews)
