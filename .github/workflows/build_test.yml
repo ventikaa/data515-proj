@@ -1,12 +1,10 @@
 name: build_test
 
-"on":
+on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   build_test:
@@ -27,11 +25,23 @@ jobs:
           auto-update-conda: true
           auto-activate-base: false
 
+      # Install browser + webdriver for Selenium / Dash tests
+      - name: Install Chrome + driver
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser chromium-chromedriver
+
+      # Add chromedriver to PATH (important for Selenium)
+      - name: Add chromedriver to PATH
+        run: |
+          echo "/usr/lib/chromium-browser/" >> $GITHUB_PATH
+          echo "/usr/lib/chromium/" >> $GITHUB_PATH
+
       - name: Install project
         run: |
           pip install -e .
 
-      - name: Run unit tests
+      - name: Run tests
         run: |
           coverage run -m pytest
           coverage report
@@ -41,7 +51,7 @@ jobs:
         run: |
           pylint api app
 
-      - name: Report code coverage to Coveralls
+      - name: Report coverage to Coveralls
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}

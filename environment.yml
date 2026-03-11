@@ -7,7 +7,7 @@ channels:
 dependencies:
   - python=3.10
 
-  # core data stack (better through conda)
+  # core data stack
   - numpy=2.2.6
   - pandas=2.3.3
   - matplotlib=3.10.8
@@ -20,12 +20,15 @@ dependencies:
   - jupyterlab
   - ipykernel
 
-  # dev tools (CI)
+  # dev tools
   - pylint=4.0.4
   - coverage=7.6.1
 
-  # dash testing dependency
+  # Dash testing requirements
   - multiprocess
+  - selenium
+  - chromium
+  - chromium-driver
 
   # pip support
   - pip
