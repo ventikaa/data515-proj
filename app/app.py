@@ -176,14 +176,14 @@ def recipe_finder_layout():
 
         dbc.Row([
             dbc.Col([
-                html.H1("✨ Cooking Helper", style={"color": COLORS["primary"],
+                html.H1("🍳 Cooking Helper", style={"color": COLORS["primary"],
                                                    "fontWeight": "600", "marginTop": "30px"}),
                 html.P("Find recipes and check real-time Kroger prices", className="text-muted"),
             ], width=9),
             dbc.Col(dbc.Button("🛒 My Cart", href="/cart",
                                style={"backgroundColor": COLORS["secondary"],
                                       "border": "none", "borderRadius": "20px",
-                                      "marginTop": "40px"}), width=3)
+                                      "marginTop": "40px", "float": "right"}), width=3)
         ]),
 
         dbc.Row([
@@ -255,7 +255,7 @@ def shopping_cart_layout():
                                       "marginTop": "30px",
                                       "textDecoration": "none"}), width=2),
 
-            dbc.Col(html.H1("🌸 Your Shopping List",
+            dbc.Col(html.H1("🗒️ Your Shopping List",
                             style={"color": COLORS["primary"],
                                    "marginTop": "30px"}), width=7),
 
