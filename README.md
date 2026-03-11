@@ -1,4 +1,8 @@
-Project Title: Cooking Helper!
+# Project Title: Cooking Helper!
+
+![Build](https://github.com/ventikaa/data515-proj/actions/workflows/build_test.yml/badge.svg)
+
+[![Coverage Status](https://coveralls.io/repos/github/ventikaa/data515-proj/badge.svg?branch=main)](https://coveralls.io/github/ventikaa/data515-proj?branch=main)
 
 Team Members: 
 - William Hu
@@ -21,5 +25,5 @@ Key Components
 - End-to-end data pipelines supporting both analytics and user tools
 
 Technologies & Data Sources
-- Kroger Development API
-- Large-scale recipe datasets
+- [Kroger Development API](https://developer.kroger.com/api-products)
+- [Kaggle Recipe Dataset](https://www.kaggle.com/datasets/irkaal/foodcom-recipes-and-reviews)
