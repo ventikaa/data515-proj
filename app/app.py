@@ -3,7 +3,6 @@ Cooking Helper Dash Application.
 Finds recipes and fetches real-time Kroger prices based on user location.
 """
 import json
-import re
 import sys
 from itertools import zip_longest
 from pathlib import Path
@@ -60,7 +59,6 @@ def parse_r_list(r_string):
         if "., " in clean_val:
             clean_val = clean_val.replace("., ", ". ")
         result = [p.strip() for p in clean_val.split('.') if p.strip()]
-        
 
     return result
 
