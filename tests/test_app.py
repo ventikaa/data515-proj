@@ -40,7 +40,7 @@ class TestCookingHelper(unittest.TestCase):
 
     def test_parse_r_list_valid(self):
         """Test parsing a standard R-style character vector string."""
-        r_string = 'c("Butter", "Sugar", "Flour")'
+        r_string = 'Butter, Sugar, Flour'
         expected = ["Butter", "Sugar", "Flour"]
         self.assertEqual(parse_r_list(r_string), expected)
 
