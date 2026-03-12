@@ -4,6 +4,10 @@ The following instructions are to be performed in a command line interface from 
 - "git clone" the repository to download the latest version of the application
 - Download conda, and creating a virtual environment from the environment.yml file, located at the root of the repository. 
     - The command for this is conda env create -f environment.yml.
+- The public Kroger Developer API key is needed for this project.
+    - Navigate to the [Kroger Developer Site](https://developer.kroger.com/api-products) and make an account. Request access for the location and product access. You will be allocated a Kroger Client ID and Client Secret. Add these into your .env file like below (Do not share these secrets!).
+    - KROGER_CLIENT_ID=INSERT_CLIENT_ID_HERE
+    - KROGER_CLIENT_SECRET=INSERT_CLIENT_SECRET_HERE
 - Run "python app/app.py"
 
 ![Home Page](images/Front-Page.png)
