@@ -16,11 +16,6 @@ from dash import ALL, Input, Output, State, callback, dcc, html
 from api.kroger_shopping_cart import ShoppingCart
 from api.kroger_store_locator import KrogerStoreLocator
 
-
-# root_dir = Path(__file__).resolve().parent.parent
-# sys.path.append(str(root_dir))
-# from api.shopping_cart import main
-
 root_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(root_dir))
 
